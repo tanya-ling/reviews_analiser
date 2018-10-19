@@ -25,6 +25,7 @@ def csv_reader(file_obj, deli):
 def delete_n(row):
     return row['review'].replace('\n', ' ')
 
+
 def add_column(df, name_col, list_to_add):
     if name_col == 'stemmed_info':
         df = df.assign(stemmed_info=list_to_add)
@@ -61,8 +62,8 @@ def combine_info_row(row, genre_weight, author_weight, series_weight, title_weig
 
 
 def combine_information(df, genre_weight, author_weight, series_weight, title_weight):
-    sLength = len(df['book_author'])
-    infos = [0 for i in range(sLength)]
+    slength = len(df['book_author'])
+    infos = [0 for i in range(slength)]
     i = 0
     for index, row in df.iterrows():
         info = combine_info_row(row, genre_weight, author_weight, series_weight, title_weight)
@@ -71,21 +72,18 @@ def combine_information(df, genre_weight, author_weight, series_weight, title_we
     return infos
 
 
-
 if __name__ == "__main__":
-    db = read_csv_data("2017_books_v5.csv")
+    db = read_csv_data("2017_books_v5.csv", ';')
     db = add_column(db, 'stemmed_info', stem_comments(db.review))
     db = add_column(db, 'combined_info', combine_information(db, 5, 5, 5, 5))
     db.to_csv('2017_books_v5_preproc_v1.csv', sep='|')
     print(db.info())
 
 
-
-
 # titles_set = set(db['book_title'])
 # print('unic book_titles:', len(db['book_title'].unique().tolist()))
 
-#print(db.ix[2940]['book_title'])
+# print(db.ix[2940]['book_title'])
 
 # review_exist = []
 # for i in range(2940):
@@ -95,4 +93,3 @@ if __name__ == "__main__":
 #         review_exist.append(db.at[i, 'book_title'])
 #
 # print(len(set(review_exist)))
-
