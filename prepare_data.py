@@ -4,22 +4,26 @@ from nltk import pos_tag
 from nltk.stem import WordNetLemmatizer
 
 
-def read_csv_data(name):
+def read_csv_data(name, deli):
     csv_path = name
     with open(csv_path, "r") as f_obj:
-        db = csv_reader(f_obj)
+        db = csv_reader(f_obj, deli)
     return db
 
 
-def csv_reader(file_obj):
+def csv_reader(file_obj, deli):
     """
     Read a csv file
     """
-    reader = pandas.read_csv(file_obj, sep=';')
-    reader['review'] = reader[['review']].apply(lambda x: x.replace('\n', 'QUARREL'), axis=1)
+    reader = pandas.read_csv(file_obj, sep=deli)
+    reader = reader[reader.review.notnull()]
+    reader['review'] = reader.apply(delete_n, axis=1)
     print(reader.info())
     return reader
 
+
+def delete_n(row):
+    return row['review'].replace('\n', ' ')
 
 def add_column(df, name_col, list_to_add):
     if name_col == 'stemmed_info':
@@ -41,23 +45,22 @@ def stem_comments(column):
 
 
 def combine_info_row(row, genre_weight, author_weight, series_weight, title_weight):
+    # if genre_weight == 1:
+    #     print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1')
     if pandas.isnull(row['Book_series']):
         series_info = ' '
     else:
         series_info = row['Book_series'].replace('0', '')
-        for j in '123456789'.split():
+        for j in list('123456789'):
             series_info = series_info.replace(j, '')
     genre_info = row['genre'].lower().replace(',', '')
-    # info = ' '.join([row['book_title'].lower(), genre_info,
-    #                  row['book_author'].lower(), series_info,
-    #                  row['stemmed_info']])
-    info = ' '.join([row['book_title'].lower() * title_weight, genre_info * genre_weight,
-                     row['book_author'].lower() * author_weight, series_info * series_weight,
+    info = ' '.join([(row['book_title'].lower() + ' ') * title_weight, (genre_info + ' ') * genre_weight,
+                     (row['book_author'].lower() + ' ') * author_weight, (series_info + ' ') * series_weight,
                      row['stemmed_info']])
     return info
 
 
-def combine_information(df, genre_weight=1, author_weight=1, series_weight=1, title_weight=1):
+def combine_information(df, genre_weight, author_weight, series_weight, title_weight):
     sLength = len(df['book_author'])
     infos = [0 for i in range(sLength)]
     i = 0
@@ -71,7 +74,6 @@ def combine_information(df, genre_weight=1, author_weight=1, series_weight=1, ti
 
 if __name__ == "__main__":
     db = read_csv_data("2017_books_v5.csv")
-    db = db[db.review.notnull()]
     db = add_column(db, 'stemmed_info', stem_comments(db.review))
     db = add_column(db, 'combined_info', combine_information(db, 5, 5, 5, 5))
     db.to_csv('2017_books_v5_preproc_v1.csv', sep='|')
