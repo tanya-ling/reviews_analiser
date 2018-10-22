@@ -72,6 +72,12 @@ def combine_information(df, genre_weight, author_weight, series_weight, title_we
     return infos
 
 
+def text_sum(text_series):
+    x = ''
+    for i in text_series:
+        x += i + '0'
+    return x
+
 if __name__ == "__main__":
     db = read_csv_data("2017_books_v5.csv", ';')
     db = add_column(db, 'stemmed_info', stem_comments(db.review))

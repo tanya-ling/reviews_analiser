@@ -34,7 +34,17 @@ def change_weights_only(path_old, path_new, old_deli, genre_weight=1, author_wei
     db.to_csv(path_new, sep='|', index=False)
 
 
+def reviews_aggregation(path_old, path_new, old_deli):
+    db = pd.read_csv_data(path_old, old_deli)
+    db = db[['book_title', 'combined_info', 'ID']]
+    db = db.groupby('book_title')['combined_info'].agg(pd.text_sum).reset_index()
+    # db = db.groupby('book_title')['combined_info'].agg(pd.text_sum)
+    # print(db.info())
+    db.to_csv(path_new, sep='|', index=False)
+
+
 if __name__ == "__main__":
     # process_new_file("2017_books_v5.csv", '2017_books_v5_preproc_v1.csv', ';', 5, 5, 5, 5)
     # change_weights_only('2017_books_v5_preproc_v1.csv', '2017_books_v5_preproc_v2.csv', '|')
-    process_new_lines('2017_books_v5_preproc_v2.csv', '2017_books_v5_preproc_v3.csv', '|')
+    # process_new_lines('2017_books_v5_preproc_v2.csv', '2017_books_v5_preproc_v3.csv', '|')
+    reviews_aggregation('2017_books_v5_preproc_v3.csv', '2017_books_v5_preproc_v3_agreg_v1.csv', '|')
