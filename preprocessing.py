@@ -40,6 +40,7 @@ def reviews_aggregation(path_old, path_new, old_deli):
     db = db.groupby('book_title')['combined_info'].agg(pd.text_sum).reset_index()
     # db = db.groupby('book_title')['combined_info'].agg(pd.text_sum)
     # print(db.info())
+    db.columns = ['book_title', 'review']
     db.to_csv(path_new, sep='|', index=False)
 
 

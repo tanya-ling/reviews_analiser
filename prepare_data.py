@@ -31,6 +31,8 @@ def add_column(df, name_col, list_to_add):
         df = df.assign(stemmed_info=list_to_add)
     elif name_col == 'combined_info':
         df = df.assign(combined_info=list_to_add)
+    elif name_col == 'keywords':
+        df = df.assign(keywords=list_to_add)
     return df
 
 
