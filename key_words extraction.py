@@ -4,6 +4,7 @@ from sklearn.feature_extraction.text import TfidfTransformer
 import time
 import pandas
 import gensim
+# import pyenchant
 
 
 def sort_coo(coo_matrix):
@@ -51,35 +52,35 @@ def key_word_extraction(db, kw_numbr=10):
         sorted_items = sort_coo(tf_idf_vector.tocoo())
         keywords = extract_topn_from_vector(feature_names, sorted_items, kw_numbr)
         for keyword in keywords:
-            wv = word_vector(keyword)
+            wv = word_vector(keyword, model)
             if True:
-                kw_dict[j] = [db.at[i, 'book_title'], keyword, ' '.join(wv)]
+                kw_dict[j] = [db.at[i, 'book_title'], keyword, ' '.join(map(str, wv))]
                 j += 1
         i += 1
     return kw_dict
 
 
 def w2v_model_loading(path='./GoogleNews-vectors-negative300.bin/GoogleNews-vectors-negative300.bin'):
+    print('starting loading w2vec model')
     t1 = time.clock()
     # Load Google's pre-trained Word2Vec model.
     model = gensim.models.KeyedVectors.load_word2vec_format(path, binary=True)
     print('the model is loaded successfully, time consumed: ', str(time.clock() - t1), ' sec')
+    return model
+
+
+def word_vector(word, model):
     # does not include some stopwords and numbers
-    # model.wv['hello'].shape (300,)
-
-
-def word_vector(word):
+    if word in model.vocab:
+        return model.wv[word] # .shape(300,))
     return ['1', '2', '3', '4', '5']
 
 if __name__ == "__main__":
     db = read_csv_data('2017_books_v5_preproc_v3_agreg_v1.csv', '|')
     print(db.info())
-    # keywords = key_word_extraction(db, 10)
-    # db = add_column(db, 'keywords', keywords)
-    # db[['book_title', 'keywords']].to_csv('2017_books_v5_preproc_v3_agreg_v1_keywords_v1.csv', sep='|', index=False)
+    model = w2v_model_loading()
     columns = ['book_title', 'keyword', 'keyword_vector']
     ndf = pandas.DataFrame.from_dict(key_word_extraction(db, 10), orient='index')
     ndf.columns = columns
     ndf.to_csv('2017_books_v5_preproc_v3_agreg_v1_keywords_v2.csv', sep='|', index=False)
     print(ndf.info())
-    # w2v_model_loading()
