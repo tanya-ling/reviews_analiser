@@ -4,20 +4,21 @@ from nltk import pos_tag
 from nltk.stem import WordNetLemmatizer
 
 
-def read_csv_data(name, deli):
+def read_csv_data(name, deli, rew=True):
     csv_path = name
     with open(csv_path, "r") as f_obj:
-        db = csv_reader(f_obj, deli)
+        db = csv_reader(f_obj, deli, rew)
     return db
 
 
-def csv_reader(file_obj, deli):
+def csv_reader(file_obj, deli, rew):
     """
     Read a csv file
     """
     reader = pandas.read_csv(file_obj, sep=deli)
-    reader = reader[reader.review.notnull()]
-    reader['review'] = reader.apply(delete_n, axis=1)
+    if rew:
+        reader = reader[reader.review.notnull()]
+        reader['review'] = reader.apply(delete_n, axis=1)
     print(reader.info())
     return reader
 
@@ -48,8 +49,6 @@ def stem_comments(column):
 
 
 def combine_info_row(row, genre_weight, author_weight, series_weight, title_weight):
-    # if genre_weight == 1:
-    #     print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1')
     if pandas.isnull(row['Book_series']):
         series_info = ' '
     else:
@@ -80,24 +79,10 @@ def text_sum(text_series):
         x += i + '0'
     return x
 
+
 if __name__ == "__main__":
     db = read_csv_data("2017_books_v5.csv", ';')
     db = add_column(db, 'stemmed_info', stem_comments(db.review))
     db = add_column(db, 'combined_info', combine_information(db, 5, 5, 5, 5))
     db.to_csv('2017_books_v5_preproc_v1.csv', sep='|')
     print(db.info())
-
-
-# titles_set = set(db['book_title'])
-# print('unic book_titles:', len(db['book_title'].unique().tolist()))
-
-# print(db.ix[2940]['book_title'])
-
-# review_exist = []
-# for i in range(2940):
-#     if pandas.isnull(db.at[i,'book_genre']):
-#         pass
-#     else:
-#         review_exist.append(db.at[i, 'book_title'])
-#
-# print(len(set(review_exist)))
