@@ -9,7 +9,7 @@ def process_new_file(path_old, path_new, old_deli, genre_weight=1, author_weight
                                                                    series_weight, title_weight))
     print(db.info())
     with open(path_new, mode='w', newline='\r\n') as f:
-        db.to_csv(f, sep="|", line_terminator='\r\n', encoding='utf-8', index=False)
+        db.to_csv(f, sep="|", line_terminator='\r\n', index=False)
 
 
 def process_new_lines(path_old, path_new, old_deli, genre_weight=1, author_weight=1, series_weight=1, title_weight=1):
@@ -31,7 +31,7 @@ def change_weights_only(path_old, path_new, old_deli, genre_weight=1, author_wei
                                                                    series_weight, title_weight)
 
     print(db.info())
-    db.to_csv(path_new, sep='|', index=False)
+    db.to_csv(path_new, sep='|', index=False, encoding='cp1251')
 
 
 def reviews_aggregation(path_old, path_new, old_deli):
@@ -41,11 +41,13 @@ def reviews_aggregation(path_old, path_new, old_deli):
     # db = db.groupby('book_title')['combined_info'].agg(pd.text_sum)
     # print(db.info())
     db.columns = ['book_title', 'review']
-    db.to_csv(path_new, sep='|', index=False)
+    db.to_csv(path_new, sep='|', index=False, encoding='cp1251')
 
 
 if __name__ == "__main__":
     # process_new_file("2017_books_v5.csv", '2017_books_v5_preproc_v1.csv', ';', 5, 5, 5, 5)
-    # change_weights_only('2017_books_v5_preproc_v1.csv', '2017_books_v5_preproc_v2.csv', '|')
+    change_weights_only('2017_books_v5_preproc_v3.csv', '2017_books_v5_preproc_v4.csv', '|',
+                        genre_weight=3, author_weight=4)
     # process_new_lines('2017_books_v5_preproc_v2.csv', '2017_books_v5_preproc_v3.csv', '|')
-    reviews_aggregation('2017_books_v5_preproc_v3.csv', '2017_books_v5_preproc_v3_agreg_v1.csv', '|')
+    print('weights changed, starting aggregation')
+    reviews_aggregation('2017_books_v5_preproc_v4.csv', '2017_books_v5_preproc_v4_agreg_v1.csv', '|')

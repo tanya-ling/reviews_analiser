@@ -57,9 +57,9 @@ def combine_info_row(row, genre_weight, author_weight, series_weight, title_weig
         for j in list('123456789'):
             series_info = series_info.replace(j, '')
     genre_info = row['genre'].lower().replace(',', '')
-    info = ' '.join([(row['book_title'].lower() + ' ') * title_weight, (genre_info + ' ') * genre_weight,
+    info = '    ' + ' '.join([(row['book_title'].lower() + ' ') * title_weight, (genre_info + ' ') * genre_weight,
                      (row['book_author'].lower() + ' ') * author_weight, (series_info + ' ') * series_weight,
-                     row['stemmed_info']])
+                     row['stemmed_info']]) + '    '
     return info
 
 

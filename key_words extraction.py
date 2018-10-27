@@ -1,10 +1,10 @@
-from prepare_data import read_csv_data, add_column
+from prepare_data import read_csv_data
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 import time
 import pandas
 import gensim
-# import pyenchant
+from autocorrect import spell
 
 
 def sort_coo(coo_matrix):
@@ -32,8 +32,32 @@ def extract_topn_from_vector(feature_names, sorted_items, topn):
     results = {}
     for idx in range(len(feature_vals)):
         results[feature_vals[idx]] = score_vals[idx]
-
     return results
+
+
+def kw_vectorization(tfidf_transformer, cv, docs, feature_names, kw_numbr, kw_dict={}, j=0, i=0):
+    for doc in docs:
+        tf_idf_vector = tfidf_transformer.transform(cv.transform([doc]))
+        sorted_items = sort_coo(tf_idf_vector.tocoo())
+        keywords = extract_topn_from_vector(feature_names, sorted_items, kw_numbr)
+        number_unknown = 0
+        first_kw = True
+        for keyword in keywords:
+            kw = spell(keyword)
+            wv = word_vector(kw, model)
+            if kw in model.vocab:
+                kw_dict[j] = [db.at[i, 'book_title'], kw, ' '.join(map(str, wv))]
+                if first_kw:
+                    first_kw = False
+                    main_kw = kw_dict[j]
+                j += 1
+            else:
+                number_unknown += 1
+        for word in range(number_unknown):
+            kw_dict[j] = main_kw
+            j += 1
+        i += 1
+    return kw_dict
 
 
 # not good to recompute every time i want to change a number of key-words!
@@ -44,19 +68,31 @@ def key_word_extraction(db, kw_numbr=10):
     tfidf_transformer = TfidfTransformer(smooth_idf=True, use_idf=True)
     tfidf_transformer.fit(word_count_vector)
     feature_names = cv.get_feature_names()
-    i = 0
-    kw_dict = {}
-    j = 0
-    for doc in docs:
-        tf_idf_vector = tfidf_transformer.transform(cv.transform([doc]))
-        sorted_items = sort_coo(tf_idf_vector.tocoo())
-        keywords = extract_topn_from_vector(feature_names, sorted_items, kw_numbr)
-        for keyword in keywords:
-            wv = word_vector(keyword, model)
-            if True:
-                kw_dict[j] = [db.at[i, 'book_title'], keyword, ' '.join(map(str, wv))]
-                j += 1
-        i += 1
+    kw_dict = kw_vectorization(tfidf_transformer, cv, docs, feature_names, kw_numbr)
+    # i = 0
+    # kw_dict = {}
+    # j = 0
+    # for doc in docs:
+    #     tf_idf_vector = tfidf_transformer.transform(cv.transform([doc]))
+    #     sorted_items = sort_coo(tf_idf_vector.tocoo())
+    #     keywords = extract_topn_from_vector(feature_names, sorted_items, kw_numbr)
+    #     number_unknown = 0
+    #     first_kw = True
+    #     for keyword in keywords:
+    #         kw = spell(keyword)
+    #         wv = word_vector(kw, model)
+    #         if kw in model.vocab:
+    #             kw_dict[j] = [db.at[i, 'book_title'], kw, ' '.join(map(str, wv))]
+    #             if first_kw:
+    #                 first_kw = False
+    #                 main_kw = kw_dict[j]
+    #             j += 1
+    #         else:
+    #             number_unknown += 1
+    #     for word in range(number_unknown):
+    #         kw_dict[j] = main_kw
+    #         j += 1
+    #     i += 1
     return kw_dict
 
 
@@ -76,11 +112,11 @@ def word_vector(word, model):
     return ['1', '2', '3', '4', '5']
 
 if __name__ == "__main__":
-    db = read_csv_data('2017_books_v5_preproc_v3_agreg_v1.csv', '|')
+    db = read_csv_data('2017_books_v5_preproc_v4_agreg_v1.csv', '|')
     print(db.info())
     model = w2v_model_loading()
     columns = ['book_title', 'keyword', 'keyword_vector']
     ndf = pandas.DataFrame.from_dict(key_word_extraction(db, 10), orient='index')
     ndf.columns = columns
-    ndf.to_csv('2017_books_v5_preproc_v3_agreg_v1_keywords_v2.csv', sep='|', index=False)
+    ndf.to_csv('2017_books_v5_preproc_v4_agreg_v1_keywords_v5.csv', sep='|', index=False)
     print(ndf.info())
