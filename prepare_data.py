@@ -55,7 +55,10 @@ def combine_info_row(row, genre_weight, author_weight, series_weight, title_weig
         series_info = row['Book_series'].replace('0', '')
         for j in list('123456789'):
             series_info = series_info.replace(j, '')
-    genre_info = row['genre'].lower().replace(',', '')
+    if pandas.isnull(row['genre']):
+        genre_info = ' '
+    else:
+        genre_info = row['genre'].lower().replace(',', '')
     info = '    ' + ' '.join([(row['book_title'].lower() + ' ') * title_weight, (genre_info + ' ') * genre_weight,
                      (row['book_author'].lower() + ' ') * author_weight, (series_info + ' ') * series_weight,
                      row['stemmed_info']]) + '    '
@@ -81,8 +84,19 @@ def text_sum(text_series):
 
 
 if __name__ == "__main__":
-    db = read_csv_data("2017_books_v5.csv", ';')
-    db = add_column(db, 'stemmed_info', stem_comments(db.review))
-    db = add_column(db, 'combined_info', combine_information(db, 5, 5, 5, 5))
-    db.to_csv('2017_books_v5_preproc_v1.csv', sep='|')
+    db = read_csv_data("books2.csv", ';', False)
+    print('unic ids bok:', len(db['unique ID'].unique().tolist()))
+    idsbook = db['unique ID'].unique()
+    print('unic titles bok:', len(db['book_title'].unique().tolist()))
+    db = read_csv_data("reviews2.csv", ';')
+    print('unic ids rew:', len(db['unique ID'].unique().tolist()))
+    idsrew = db['unique ID'].unique()
+    print('unic titles rew:', len(db['book_title'].unique().tolist()))
+    # db = add_column(db, 'stemmed_info', stem_comments(db.review))
+    # db = add_column(db, 'combined_info', combine_information(db, 5, 5, 5, 5))
+    # db.to_csv('2017_books_v5_preproc_v1.csv', sep='|')
     print(db.info())
+    for id in idsbook:
+        if id in idsrew:
+            continue
+        print(id)

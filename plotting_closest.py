@@ -42,9 +42,9 @@ def plotting(test, book_title):
 
 
 if __name__ == "__main__":
-    sourse_path = '2017_books_v5_preproc_v4_agreg_v1_keywords_v5_distances_v1.csv'
+    sourse_path = 'all_data_distances_v1.csv'
     db = read_csv_data(sourse_path, '|', rew=False)
     db.set_index('book_title', inplace=True)
-    title = 'White Hot (Hidden Legacy, #2)'
+    title = 'Harry Potter and the Sorcerer\'s Stone'
     dic = creater_coordinates(db.loc[title].values, title)
     plotting(dic, title)

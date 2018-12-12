@@ -1,7 +1,7 @@
 from prepare_data import read_csv_data
 import numpy
 import pandas
-
+import time
 
 def splitting(row):
     splitstring = row['keyword_vector'].split(' ')
@@ -9,11 +9,16 @@ def splitting(row):
     return splitstring
 
 
-def book2book_distance(book_title1, book_title2):
-    return book2_distance(book_title1, book_title2) + book2_distance(book_title2, book_title1)
+def change_title(title):
+    title = title.replace('вЂ™', 'a€™')
+    title = title.replace('????????1? ???????', 'e?Za?«a›?e•·?®?a?—a€•c¬¬1e?? e?•a‚?a‚‹a‚¤a?‡a‚?c·?')
+    return title
+
+def book2book_distance(db, book_title1, book_title2):
+    return book2_distance(db, book_title1, book_title2) + book2_distance(db, book_title2, book_title1)
 
 
-def book2_distance(book_title1, book_title2):
+def book2_distance(db, book_title1, book_title2):
     array1 = numpy.array(db[book_title1])
     array2 = numpy.array(db[book_title2])
     D = 0
@@ -27,11 +32,11 @@ def book2_distance(book_title1, book_title2):
     return D
 
 
-def book2allbooks_distances(book_title, number):
+def book2allbooks_distances(db, book_title, number):
     dic = {}
     for a in db.index:
         if a != book_title:
-            D = book2book_distance(a, book_title)
+            D = book2book_distance(db, a, book_title)
             dic[a] = D
     list_pairs = [0 for i in range(number)]
     i = 0
@@ -42,12 +47,21 @@ def book2allbooks_distances(book_title, number):
             return list_pairs
 
 
-def closest_for_every_book(results_path, number=10):
+def closest_for_every_book(db, results_path, number=10):
+    ids_path = 'books_ids.csv'
+    idb = read_csv_data(ids_path, ';')
+    idb.set_index('uniqueID', inplace=True)
     dic = {}
+    nr = 0
+    t0 = time.clock()
     for book_pr in db.index:
-        dic[book_pr] = book2allbooks_distances(book_pr, number)
+        if nr % 72 == 0:
+            print(round(nr / 715 * 100), '% done, time consumed', round(-(t0 - time.clock()) / 60), ' min')
+        nr += 1
+        dic[book_pr] = book2allbooks_distances(db, book_pr, number)
+        # dic[idb.loc[change_title(book_pr)]['uniqueID']] = book2allbooks_distances(db, book_pr, number)
     ndf = pandas.DataFrame.from_dict(dic, orient='index')
-    ndf.index.name = 'book_title'
+    ndf.index.name = 'uniqueID'
     ndf.to_csv(results_path, sep='|', index=True)
 
 
@@ -57,9 +71,9 @@ if __name__ == "__main__":
     # print(book2book_distance('Wildfire (Hidden Legacy, #3)', 'White Hot (Hidden Legacy, #2)'))
     # dic = book2allbooks_distances('Wildfire (Hidden Legacy, #3)', 3)
     # print(sorted( ((v,k) for k,v in dic.items()), reverse=False))
-    sourse_path = '2017_books_v5_preproc_v4_agreg_v1_keywords_v5.csv'
+    sourse_path = 'all_data_less_kw_20.csv'
     db = read_csv_data(sourse_path, '|', rew=False)
     db['keyword_vector'] = db.apply(splitting, axis=1)
     print(db.head())
     db = db.groupby('book_title')['keyword_vector'].agg(list)
-    closest_for_every_book('2017_books_v5_preproc_v4_agreg_v1_keywords_v5_distances_v1.csv')
+    closest_for_every_book('all_data_less_dis_20.csv')
